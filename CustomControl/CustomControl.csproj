@@ -4,16 +4,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{DC6955D3-6A64-4AB7-9AF2-413B00EE29A5}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
-    <RootNamespace>RxDemo</RootNamespace>
-    <AssemblyName>RxDemo</AssemblyName>
+    <ProjectGuid>{BBB475CB-0E11-4C2A-828F-3FC6342C8406}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>CustomControl</RootNamespace>
+    <AssemblyName>CustomControl</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <LangVersion>8.0</LangVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,7 +23,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -38,52 +37,37 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DragDropDemo.cs">
-      <SubType>Form</SubType>
+    <Compile Include="GridFlowLayoutItem.cs">
+      <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DragDropDemo.Designer.cs">
-      <DependentUpon>DragDropDemo.cs</DependentUpon>
+    <Compile Include="GridFlowLayoutItem.Designer.cs">
+      <DependentUpon>GridFlowLayoutItem.cs</DependentUpon>
     </Compile>
-    <Compile Include="Program.cs" />
+    <Compile Include="GridFlowLayoutPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="GridFlowLayoutPanel.Designer.cs">
+      <DependentUpon>GridFlowLayoutPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LayoutItem.cs" />
+    <Compile Include="LayoutItemComparer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="DragDropDemo.resx">
-      <DependentUpon>DragDropDemo.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
+    <Service Include="{94E38DFF-614B-4cbd-B67C-F211BB35CE8B}" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers">
+      <Version>2.9.8</Version>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Rx-Main">
       <Version>2.2.5</Version>
     </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CustomControl\CustomControl.csproj">
-      <Project>{bbb475cb-0e11-4c2a-828f-3fc6342c8406}</Project>
-      <Name>CustomControl</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
