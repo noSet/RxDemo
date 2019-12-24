@@ -17,6 +17,8 @@ namespace CustomControl
 
         public bool Moving { get; set; }
 
+        public bool Static { get; set; }
+
         public object ItemRef { get; set; }
 
         /// <summary>

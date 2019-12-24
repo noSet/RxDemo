@@ -45,7 +45,7 @@
             // 
             // button6
             // 
-            this.button6.Location = new System.Drawing.Point(284, 623);
+            this.button6.Location = new System.Drawing.Point(119, 976);
             this.button6.Name = "button6";
             this.button6.Size = new System.Drawing.Size(75, 23);
             this.button6.TabIndex = 3;
@@ -100,7 +100,7 @@
             // 
             // button7
             // 
-            this.button7.Location = new System.Drawing.Point(398, 623);
+            this.button7.Location = new System.Drawing.Point(236, 976);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(75, 23);
             this.button7.TabIndex = 4;
@@ -116,7 +116,7 @@
             this.gridFlowLayoutPanel1.Controls.Add(this.Yellow);
             this.gridFlowLayoutPanel1.Location = new System.Drawing.Point(95, 12);
             this.gridFlowLayoutPanel1.Name = "gridFlowLayoutPanel1";
-            this.gridFlowLayoutPanel1.Size = new System.Drawing.Size(1195, 592);
+            this.gridFlowLayoutPanel1.Size = new System.Drawing.Size(1208, 877);
             this.gridFlowLayoutPanel1.TabIndex = 2;
             // 
             // Red
@@ -149,7 +149,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1302, 744);
+            this.ClientSize = new System.Drawing.Size(1647, 1083);
             this.Controls.Add(this.button7);
             this.Controls.Add(this.button6);
             this.Controls.Add(this.gridFlowLayoutPanel1);
