@@ -40,7 +40,8 @@ namespace CustomControl
                 .Select(p => p.EventArgs.Location);
 
             var mouseUp = Observable.FromEventPattern<MouseEventArgs>(this, nameof(this.MouseUp))
-                .Where(p => p.EventArgs.Button == MouseButtons.Left);
+                .Where(p => p.EventArgs.Button == MouseButtons.Left)
+                .Select(p => p.EventArgs.Location);
 
             var elementMoves = from start in mouseDown.Where(p => p.Y <= 10)
                                from process in mouseMove.TakeUntil(mouseUp)
@@ -58,6 +59,16 @@ namespace CustomControl
                                 select process;
 
             elementResize.Subscribe(p => this.Size = new Size(p));
+
+            mouseDown
+                .Where(p => p.Y <= 10)
+                .Zip(mouseMove, (one, two) => one)
+                .Subscribe(i => Console.WriteLine("开始拖拽"));
+
+            mouseUp
+                .Where(p => p.Y <= 10)
+                .Zip(mouseMove, (one, two) => one)
+                .Subscribe(i => Console.WriteLine("结束拖拽"));
         }
 
         protected override void OnMouseMove(MouseEventArgs e)

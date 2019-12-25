@@ -91,6 +91,12 @@ namespace CustomControl
 
             Console.WriteLine(layoutEventArgs.AffectedProperty);
 
+            //if (layoutEventArgs.AffectedProperty != "Bounds")
+            //{
+            //    return true;
+            //}
+            
+
             // 初始化
             if (object.ReferenceEquals(layoutEventArgs.AffectedControl, this.Owner))
             {
@@ -205,21 +211,22 @@ namespace CustomControl
 
         public void Compact()
         {
-            // 这里确定列表已经先经过Y轴再经过X轴排序（从左到右从上到下）
-            // todo: 因为是有序序列，所以需要先ToArray，防止改变了Y轴导致列表重新排序
-            foreach (var item in Layouts.ToArray())
+            var sortLayout = Layouts.OrderBy(i => i, new LayoutItemComparer()).ToArray();
+            foreach (var item in sortLayout)
             {
-                // 移动的元素不需要参加排序
-                if (item.Moving || item.Static)
+                if (item.Moving)
                 {
                     continue;
                 }
 
-                // 若向上移动一格时，不发生碰撞，现在还有一个问题，若移动的元素上方还有空格，需要想办法填充
-                while (item.Y > 0 && Layouts.FirstOrDefault(i => new LayoutItem() { Id = string.Empty, X = item.X, Y = item.Y - 1, Width = item.Width, Height = item.Height }.IntersectsWith(i)) == null)
+                var fakeItem = item.FakeItem(item.X, 0);
+
+                while (Layouts.FirstOrDefault(i => i != item && i.IntersectsWith(fakeItem)) != null)
                 {
-                    item.Y--;
+                    fakeItem.Y++;
                 }
+
+                item.CoverXY(fakeItem);
             }
         }
     }

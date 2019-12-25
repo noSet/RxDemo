@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxDemo", "RxDemo\RxDemo.csproj", "{DC6955D3-6A64-4AB7-9AF2-413B00EE29A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GridFlowLayoutPanel", "GridFlowLayoutPanel\GridFlowLayoutPanel.csproj", "{253E2EB5-F5BF-48DF-AAFB-1EC8EDA60B38}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomControl", "CustomControl\CustomControl.csproj", "{BBB475CB-0E11-4C2A-828F-3FC6342C8406}"
 EndProject
 Global
@@ -19,10 +17,6 @@ Global
 		{DC6955D3-6A64-4AB7-9AF2-413B00EE29A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC6955D3-6A64-4AB7-9AF2-413B00EE29A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC6955D3-6A64-4AB7-9AF2-413B00EE29A5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{253E2EB5-F5BF-48DF-AAFB-1EC8EDA60B38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{253E2EB5-F5BF-48DF-AAFB-1EC8EDA60B38}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{253E2EB5-F5BF-48DF-AAFB-1EC8EDA60B38}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{253E2EB5-F5BF-48DF-AAFB-1EC8EDA60B38}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BBB475CB-0E11-4C2A-828F-3FC6342C8406}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BBB475CB-0E11-4C2A-828F-3FC6342C8406}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BBB475CB-0E11-4C2A-828F-3FC6342C8406}.Release|Any CPU.ActiveCfg = Release|Any CPU

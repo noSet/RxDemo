@@ -41,6 +41,29 @@ namespace CustomControl
             return otherItem.X < X + Width && X < otherItem.X + otherItem.Width && otherItem.Y < Y + Height && Y < otherItem.Y + otherItem.Height;
         }
 
+        public LayoutItem FakeItem(int x, int y)
+        {
+            return new LayoutItem
+            {
+                Id = string.Empty,
+                X = x,
+                Y = y,
+                Width = this.Width,
+                Height = this.Height,
+            };
+        }
+
+        public void CoverXY(LayoutItem otherItem)
+        {
+            if (otherItem is null)
+            {
+                throw new ArgumentNullException(nameof(otherItem));
+            }
+
+            this.X = otherItem.X;
+            this.Y = otherItem.Y;
+        }
+
         public override bool Equals(object obj)
         {
             return Equals(obj as LayoutItem);
