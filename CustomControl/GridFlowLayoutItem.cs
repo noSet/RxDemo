@@ -27,7 +27,7 @@ namespace CustomControl
 
             InitializeComponent();
 
-            Init();
+            //Init();
         }
 
         private void Init()
@@ -62,7 +62,8 @@ namespace CustomControl
 
             mouseDown
                 .Where(p => p.Y <= 10)
-                .Zip(mouseMove, (one, two) => one)
+                .SelectMany(d => mouseMove)
+                .Take(1)
                 .Subscribe(i => Console.WriteLine("开始拖拽"));
 
             mouseUp
