@@ -18,7 +18,7 @@ namespace CustomControl
 
         [Browsable(true)]
         [DefaultValue(50)]
-        public int CellWidth { get; set; } = 200;
+        public int CellWidth { get; set; } = 2;
 
         public GridFlowLayoutPanel()
         {
@@ -65,30 +65,39 @@ namespace CustomControl
         {
             const int dragRectangle = 10;
 
+            // 鼠标左键点击
             var mouseDown = Observable.FromEventPattern<MouseEventArgs>(control, nameof(control.MouseDown))
                 .Where(p => p.EventArgs.Button == MouseButtons.Left);
 
+            // 鼠标移动
             var mouseMove = Observable.FromEventPattern<MouseEventArgs>(control, nameof(control.MouseMove))
                 .Select(p => p.EventArgs.Location);
 
+            // 鼠标左键弹起
             var mouseUp = Observable.FromEventPattern<MouseEventArgs>(control, nameof(control.MouseUp))
                 .Where(p => p.EventArgs.Button == MouseButtons.Left);
 
+            // 鼠标左键点击标题部位，并且鼠标有移动
             var elementBeginMove = mouseDown
-                .Where(p => p.EventArgs.Location.Y <= 10)
+                .Where(p => p.EventArgs.Location.Y <= dragRectangle)
                 .Zip(mouseMove, (one, two) => one);
 
-            var elementMoving = from start in mouseDown.Select(p => p.EventArgs.Location).Where(p => p.Y <= 10)
+            // 鼠标左键点击标题部位，并且按住不放移动鼠标，左键弹起结束
+            var elementMoving = from start in mouseDown.Select(p => p.EventArgs.Location).Where(p => p.Y <= dragRectangle)
                                 from process in mouseMove.TakeUntil(mouseUp)
+                                where start != process
                                 select new { X = process.X - start.X, Y = process.Y - start.Y };
 
+            // 鼠标移动过程中左键弹起
             var elementEndMove = mouseUp
-                .Where(p => p.EventArgs.Location.Y <= 10)
+                .Where(p => p.EventArgs.Location.Y <= dragRectangle)
                 .Zip(mouseMove, (one, two) => one);
 
+            // 鼠标左键点击右下角调整大小并且鼠标在移动
             var elementResize = from start in mouseDown.Select(p => p.EventArgs.Location).Where(p => control.ClientRectangle.Right - p.X <= 5 && control.ClientRectangle.Bottom - p.Y <= 5)
                                 from process in mouseMove.TakeUntil(mouseUp)
                                 select process;
+
 
             _disposables[control] = new[]
             {
@@ -99,6 +108,8 @@ namespace CustomControl
                     var localtion = control.Location;
                     localtion.Offset(p.X, p.Y);
                     control.Location = localtion;
+
+                    _layoutEngine.DragDrop(control, localtion.X/ CellWidth, localtion.Y / CellWidth);
                 }),
 
                 elementEndMove.Subscribe(p => _layoutEngine.EndDrag((Control)p.Sender)),
@@ -121,7 +132,11 @@ namespace CustomControl
     // This class demonstrates a simple custom layout engine.
     public class GridFlowLayoutEngine : LayoutEngine
     {
+        public const string AffectedLayout = "Layout";
+
         public GridFlowLayoutPanel Owner { get; }
+
+        public Panel Placeholder { get; }
 
         //public SortedSet<LayoutItem> Layouts { get; }
 
@@ -130,6 +145,7 @@ namespace CustomControl
         public GridFlowLayoutEngine(GridFlowLayoutPanel owner)
         {
             Owner = owner ?? throw new ArgumentNullException(nameof(owner));
+            Placeholder = new Panel { BackColor = Color.Black, Visible = false };
         }
 
         public override void InitLayout(object child, BoundsSpecified specified)
@@ -143,32 +159,41 @@ namespace CustomControl
             Contract.Requires(container != null);
             Contract.Requires(layoutEventArgs != null);
 
-            Console.WriteLine(layoutEventArgs.AffectedProperty);
+            Debug.WriteLine(layoutEventArgs.AffectedProperty);
 
-            //if (layoutEventArgs.AffectedProperty != "Bounds")
-            //{
-            //    return true;
-            //}
+            if (layoutEventArgs.AffectedProperty == AffectedLayout)
+            {
+                foreach (var item in _controls.Values)
+                {
+                    Control control = item.ItemRef as Control;
 
+                    control.Location = new Point(item.X * this.Owner.CellWidth, item.Y * this.Owner.CellWidth);
+                    control.Size = new Size(item.Width * this.Owner.CellWidth, item.Height * this.Owner.CellWidth);
+                }
+
+                return false;
+            }
 
             // 初始化
             if (object.ReferenceEquals(layoutEventArgs.AffectedControl, this.Owner))
             {
-                for (int i = 0; i < this.Owner.Controls.Count; i++)
+                this.Owner.Controls.Add(Placeholder);
+
+                for (int i = 0; i < 3; i++)
                 {
                     Control control = this.Owner.Controls[i];
 
                     if (i == 0)
                     {
-                        _controls[control.Name] = new LayoutItem { X = 0, Y = 0, Width = 2, Height = 1, Id = control.Name, ItemRef = control };
+                        _controls[control.Name] = new LayoutItem { X = 0, Y = 0, Width = 20, Height = 10, Id = control.Name, ItemRef = control };
                     }
                     else if (i == 1)
                     {
-                        _controls[control.Name] = new LayoutItem { X = 0, Y = 1, Width = 2, Height = 1, Id = control.Name, ItemRef = control };
+                        _controls[control.Name] = new LayoutItem { X = 0, Y = 10, Width = 20, Height = 10, Id = control.Name, ItemRef = control };
                     }
                     else
                     {
-                        _controls[control.Name] = new LayoutItem { X = 2, Y = 0, Width = 1, Height = 1, Id = control.Name, ItemRef = control };
+                        _controls[control.Name] = new LayoutItem { X = 20, Y = 0, Width = 5, Height = 5, Id = control.Name, ItemRef = control };
                     }
                 }
 
@@ -183,59 +208,50 @@ namespace CustomControl
                 return false;
             }
 
-            // 移动
-            Control control1 = layoutEventArgs.AffectedControl;
-            control1.BringToFront();
-
-            if (control1.Name == "")
-            {
-                control1.Location = new Point(880, 880);
-                return false;
-            }
-
-            var moveToItem = _controls[control1.Name];
-            MoveItem(moveToItem, (int)Math.Round((double)control1.Location.X / this.Owner.CellWidth, 0), (int)Math.Round((double)control1.Location.Y / this.Owner.CellWidth));
-
-            moveToItem.Moving = true;
-            Compact();
-            moveToItem.Moving = false;
-
-            foreach (var item in _controls.Values)
-            {
-                Control control = item.ItemRef as Control;
-
-                if (object.ReferenceEquals(control, control1))
-                {
-                    continue;
-                }
-
-                control.Location = new Point(item.X * this.Owner.CellWidth, item.Y * this.Owner.CellWidth);
-                control.Size = new Size(item.Width * this.Owner.CellWidth, item.Height * this.Owner.CellWidth);
-            }
-
-            return false;
+            return base.Layout(container, layoutEventArgs);
         }
 
-        private readonly string _placeholder = Guid.NewGuid().ToString();
+        internal Control MovingControl { get; set; }
 
-        public void BeginDrag(Control control)
+        internal void BeginDrag(Control control)
         {
-            Console.WriteLine(nameof(BeginDrag));
+            Debug.WriteLine(nameof(BeginDrag));
             var moveItem = _controls[control.Name];
-
-            _controls[_placeholder] = moveItem.FakeItem(0, 0);
-            _controls[_placeholder].ItemRef = new Panel { BackColor = Color.Black, Size = control.Size, Location = control.Location };
-            this.Owner.Controls.Add(_controls[_placeholder].ItemRef as Panel);
+            Placeholder.Bounds = control.Bounds;
+            Placeholder.Visible = true;
+            moveItem.ItemRef = Placeholder;
+            control.BringToFront();
+            MovingControl = control;
         }
 
-        public void EndDrag(Control control)
+        internal void DragDrop(Control control, int x, int y)
         {
-            Console.WriteLine(nameof(EndDrag));
-            this.Owner.Controls.Remove(_controls[_placeholder].ItemRef as Panel);
-            _controls.Remove(_placeholder);
+            Debug.WriteLine(nameof(DragDrop));
+
+            if (object.ReferenceEquals(MovingControl, control))
+            {
+                var moveItem = _controls[control.Name];
+                if (MoveItem(moveItem, x, y))
+                {
+                    Compact();
+                    Layout(this.Owner, new LayoutEventArgs(this.Owner, AffectedLayout));
+                }
+            }
         }
 
-        public void MoveItem(LayoutItem moveItem, int x, int y, bool isUserAction = true)
+        internal void EndDrag(Control control)
+        {
+            Debug.WriteLine(nameof(EndDrag));
+            var moveItem = _controls[control.Name];
+            Placeholder.Visible = false;
+            moveItem.ItemRef = control;
+            MovingControl = null;
+
+            control.Location = new Point(moveItem.X * this.Owner.CellWidth, moveItem.Y * this.Owner.CellWidth);
+            control.Size = new Size(moveItem.Width * this.Owner.CellWidth, moveItem.Height * this.Owner.CellWidth);
+        }
+
+        public bool MoveItem(LayoutItem moveItem, int x, int y)
         {
             if (moveItem is null)
             {
@@ -245,7 +261,7 @@ namespace CustomControl
             // 坐标相同不移动
             if (moveItem.X == x && moveItem.Y == y)
             {
-                return;
+                return false;
             }
 
             int oldX = moveItem.X;
@@ -253,39 +269,35 @@ namespace CustomControl
 
             moveItem.X = x;
             moveItem.Y = y;
-            moveItem.Moving = true;
 
-            var needMoveItems = _controls.Values.Where(item => moveItem.IntersectsWith(item)).ToArray();
+            // 这里先排序，决定了块移动的顺序
+            IEnumerable<LayoutItem> needMoveItems = _controls.Values
+                .OrderBy(p => p, new LayoutItemComparer())
+                .Where(item => moveItem.IntersectsWith(item));
 
             foreach (var item in needMoveItems)
             {
-                if (item.Moving)
+                var fakeItem = new LayoutItem()
                 {
-                    return;
-                }
+                    X = item.X,
+                    Y = Math.Max(moveItem.Y - item.Height, 0),
+                    Width = item.Width,
+                    Height = item.Height,
+                    Id = string.Empty
+                };
 
-                if (isUserAction)
+                if (!_controls.Values.Any(i => fakeItem.IntersectsWith(i)))
                 {
-                    var fakeItem = new LayoutItem()
-                    {
-                        X = item.X,
-                        Y = Math.Max(moveItem.Y + moveItem.Height, 0),
-                        Width = item.Width,
-                        Height = item.Height,
-                        Id = string.Empty
-                    };
-
-                    if (_controls.Values.FirstOrDefault(i => fakeItem.IntersectsWith(i)) != default(LayoutItem))
-                    {
-                        MoveItem(item, item.X, fakeItem.Y, false);
-                        continue;
-                    }
+                    MoveItem(item, fakeItem.X, fakeItem.Y);
                 }
-
-                MoveItem(item, item.X, moveItem.Y + moveItem.Height, false);
+                else
+                {
+                    MoveItem(item, item.X, moveItem.Y + moveItem.Height);
+                }
             }
 
-            moveItem.Moving = false;
+
+            return true;
         }
 
         public void Compact()
@@ -293,11 +305,6 @@ namespace CustomControl
             var sortLayout = _controls.Values.OrderBy(i => i, new LayoutItemComparer()).ToArray();
             foreach (var item in sortLayout)
             {
-                if (item.Moving)
-                {
-                    continue;
-                }
-
                 var fakeItem = item.FakeItem(item.X, 0);
 
                 while (_controls.Values.FirstOrDefault(i => i != item && i.IntersectsWith(fakeItem)) != null)

@@ -110,7 +110,7 @@
             // 
             // gridFlowLayoutPanel1
             // 
-            this.gridFlowLayoutPanel1.CellWidth = 200;
+            this.gridFlowLayoutPanel1.CellWidth = 20;
             this.gridFlowLayoutPanel1.Controls.Add(this.Red);
             this.gridFlowLayoutPanel1.Controls.Add(this.Blue);
             this.gridFlowLayoutPanel1.Controls.Add(this.Yellow);
@@ -124,25 +124,25 @@
             this.Red.BackColor = System.Drawing.Color.Red;
             this.Red.Location = new System.Drawing.Point(0, 0);
             this.Red.Name = "Red";
-            this.Red.Size = new System.Drawing.Size(400, 200);
+            this.Red.Size = new System.Drawing.Size(4000, 2000);
             this.Red.TabIndex = 3;
             this.Red.TitleHeight = 0;
             // 
             // Blue
             // 
             this.Blue.BackColor = System.Drawing.Color.Blue;
-            this.Blue.Location = new System.Drawing.Point(0, 200);
+            this.Blue.Location = new System.Drawing.Point(0, 2000);
             this.Blue.Name = "Blue";
-            this.Blue.Size = new System.Drawing.Size(400, 200);
+            this.Blue.Size = new System.Drawing.Size(4000, 2000);
             this.Blue.TabIndex = 2;
             this.Blue.TitleHeight = 0;
             // 
             // Yellow
             // 
             this.Yellow.BackColor = System.Drawing.Color.Yellow;
-            this.Yellow.Location = new System.Drawing.Point(400, 0);
+            this.Yellow.Location = new System.Drawing.Point(4000, 0);
             this.Yellow.Name = "Yellow";
-            this.Yellow.Size = new System.Drawing.Size(200, 200);
+            this.Yellow.Size = new System.Drawing.Size(2000, 2000);
             this.Yellow.TabIndex = 1;
             // 
             // DragDropDemo
