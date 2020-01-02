@@ -93,15 +93,23 @@ namespace CustomControl
                 .Where(p => p.EventArgs.Location.Y <= dragRectangle)
                 .Zip(mouseMove, (one, two) => one);
 
+            var elementBeginResize = mouseDown
+                .Where(p => control.ClientRectangle.Right - p.EventArgs.Location.X <= 5 && control.ClientRectangle.Bottom - p.EventArgs.Location.Y <= 5)
+                .Zip(mouseMove, (one, two) => one);
+
+
             // 鼠标左键点击右下角调整大小并且鼠标在移动
             var elementResize = from start in mouseDown.Select(p => p.EventArgs.Location).Where(p => control.ClientRectangle.Right - p.X <= 5 && control.ClientRectangle.Bottom - p.Y <= 5)
                                 from process in mouseMove.TakeUntil(mouseUp)
                                 select process;
 
+            var elementEndResize = mouseUp
+                .Where(p => control.ClientRectangle.Right - p.EventArgs.Location.X <= 5 && control.ClientRectangle.Bottom - p.EventArgs.Location.Y <= 5)
+                .Zip(mouseMove, (one, two) => one);
 
             _disposables[control] = new[]
             {
-                elementBeginMove.Subscribe(p => _layoutEngine.BeginDrag((Control)p.Sender)),
+                elementBeginMove.Subscribe(p => _layoutEngine.OnDragStart((Control)p.Sender)),
 
                 elementMoving.Subscribe(p =>
                 {
@@ -109,12 +117,21 @@ namespace CustomControl
                     localtion.Offset(p.X, p.Y);
                     control.Location = localtion;
 
-                    _layoutEngine.DragDrop(control, localtion.X/ CellWidth, localtion.Y / CellWidth);
+                    _layoutEngine.OnDrag(control, localtion.X/ CellWidth, localtion.Y / CellWidth);
                 }),
 
-                elementEndMove.Subscribe(p => _layoutEngine.EndDrag((Control)p.Sender)),
+                elementEndMove.Subscribe(p => _layoutEngine.OnDragStop((Control)p.Sender)),
 
-                elementResize.Subscribe(p => control.Size = new Size(p)),
+                elementBeginResize.Subscribe(p=> _layoutEngine.OnResizeStart((Control)p.Sender)),
+
+                elementResize.Subscribe(p =>
+                {
+                    control.Size = new Size(p);
+
+                    _layoutEngine.OnResize(control, control.Size.Width / CellWidth, control.Size.Height / CellWidth);
+                }),
+
+                elementEndResize.Subscribe(p => _layoutEngine.OnDragStop((Control)p.Sender)),
             };
         }
 
@@ -213,9 +230,10 @@ namespace CustomControl
 
         internal Control MovingControl { get; set; }
 
-        internal void BeginDrag(Control control)
+        internal void OnDragStart(Control control)
         {
-            Debug.WriteLine(nameof(BeginDrag));
+            Debug.WriteLine(nameof(OnDragStart));
+
             var moveItem = _controls[control.Name];
             Placeholder.Bounds = control.Bounds;
             Placeholder.Visible = true;
@@ -224,14 +242,14 @@ namespace CustomControl
             MovingControl = control;
         }
 
-        internal void DragDrop(Control control, int x, int y)
+        internal void OnDrag(Control control, int x, int y)
         {
-            Debug.WriteLine(nameof(DragDrop));
+            Debug.WriteLine(nameof(OnDrag));
 
             if (object.ReferenceEquals(MovingControl, control))
             {
                 var moveItem = _controls[control.Name];
-                if (MoveItem(moveItem, x, y))
+                if (MoveItem(moveItem, x, y, moveItem.Width, moveItem.Height))
                 {
                     Compact();
                     Layout(this.Owner, new LayoutEventArgs(this.Owner, AffectedLayout));
@@ -239,9 +257,10 @@ namespace CustomControl
             }
         }
 
-        internal void EndDrag(Control control)
+        internal void OnDragStop(Control control)
         {
-            Debug.WriteLine(nameof(EndDrag));
+            Debug.WriteLine(nameof(OnDragStop));
+
             var moveItem = _controls[control.Name];
             Placeholder.Visible = false;
             moveItem.ItemRef = control;
@@ -251,7 +270,47 @@ namespace CustomControl
             control.Size = new Size(moveItem.Width * this.Owner.CellWidth, moveItem.Height * this.Owner.CellWidth);
         }
 
-        public bool MoveItem(LayoutItem moveItem, int x, int y)
+        internal void OnResizeStart(Control control)
+        {
+            Debug.WriteLine(nameof(OnResizeStart));
+
+            var item = _controls[control.Name];
+            Placeholder.Bounds = control.Bounds;
+            Placeholder.Visible = true;
+            item.ItemRef = Placeholder;
+            control.BringToFront();
+            MovingControl = control;
+        }
+
+        internal void OnResize(Control control, int width, int heigth)
+        {
+            Debug.WriteLine(nameof(OnDrag));
+
+            if (object.ReferenceEquals(MovingControl, control))
+            {
+                var item = _controls[control.Name];
+                if (MoveItem(item, item.X, item.Y, width, heigth))
+                {
+                    Compact();
+                    Layout(this.Owner, new LayoutEventArgs(this.Owner, AffectedLayout));
+                }
+            }
+        }
+
+        internal void OnResizeStop(Control control)
+        {
+            Debug.WriteLine(nameof(OnDragStop));
+
+            var item = _controls[control.Name];
+            Placeholder.Visible = false;
+            item.ItemRef = control;
+            MovingControl = null;
+
+            control.Location = new Point(item.X * this.Owner.CellWidth, item.Y * this.Owner.CellWidth);
+            control.Size = new Size(item.Width * this.Owner.CellWidth, item.Height * this.Owner.CellWidth);
+        }
+
+        public bool MoveItem(LayoutItem moveItem, int x, int y, int width, int height)
         {
             if (moveItem is null)
             {
@@ -259,16 +318,15 @@ namespace CustomControl
             }
 
             // 坐标相同不移动
-            if (moveItem.X == x && moveItem.Y == y)
+            if (moveItem.X == x && moveItem.Y == y && moveItem.Width == width && moveItem.Height == height)
             {
                 return false;
             }
 
-            int oldX = moveItem.X;
-            int oldY = moveItem.Y;
-
             moveItem.X = x;
             moveItem.Y = y;
+            moveItem.Width = width;
+            moveItem.Height = height;
 
             // 这里先排序，决定了块移动的顺序
             IEnumerable<LayoutItem> needMoveItems = _controls.Values
@@ -288,11 +346,11 @@ namespace CustomControl
 
                 if (!_controls.Values.Any(i => fakeItem.IntersectsWith(i)))
                 {
-                    MoveItem(item, fakeItem.X, fakeItem.Y);
+                    MoveItem(item, fakeItem.X, fakeItem.Y, fakeItem.Width, fakeItem.Height);
                 }
                 else
                 {
-                    MoveItem(item, item.X, moveItem.Y + moveItem.Height);
+                    MoveItem(item, item.X, moveItem.Y + moveItem.Height, item.Width, item.Height);
                 }
             }
 
