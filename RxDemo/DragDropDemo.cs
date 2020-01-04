@@ -1,6 +1,10 @@
-﻿using System;
+﻿using CustomControl;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Windows.Forms;
@@ -61,9 +65,34 @@ namespace RxDemo
             //});
         }
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            if (File.Exists(".\\layout.txt"))
+            {
+                var jsonData = File.ReadAllText(".\\layout.txt");
+
+                var items = JsonConvert.DeserializeObject<IEnumerable<LayoutItem>>(jsonData);
+
+                gridFlowLayoutPanel1.InitLayout(items);
+            }
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            var items = this.gridFlowLayoutPanel1.GetLayoutItems();
+
+            string jsonData = JsonConvert.SerializeObject(items);
+
+            File.WriteAllText(".\\layout.txt", jsonData);
+
+            base.OnClosed(e);
+        }
+
         private void button6_Click(object sender, EventArgs e)
         {
-            gridFlowLayoutPanel1.Controls.Add(new Button() { Text = "abc" });
+            gridFlowLayoutPanel1.Controls.Add(new Button() { Name = Guid.NewGuid().ToString(), Text = "abc" });
         }
 
         private void button7_Click(object sender, EventArgs e)

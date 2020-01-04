@@ -75,6 +75,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.3</Version>
+    </PackageReference>
     <PackageReference Include="Rx-Main">
       <Version>2.2.5</Version>
     </PackageReference>

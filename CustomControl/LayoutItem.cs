@@ -1,18 +1,25 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace CustomControl
 {
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class LayoutItem : IEquatable<LayoutItem>
     {
+        [JsonProperty]
         public string Id { get; set; }
 
+        [JsonProperty]
         public int X { get; set; }
 
+        [JsonProperty]
         public int Y { get; set; }
 
+        [JsonProperty]
         public int Width { get; set; }
 
+        [JsonProperty]
         public int Height { get; set; }
 
         public bool Moving { get; set; }
@@ -41,19 +48,15 @@ namespace CustomControl
             return otherItem.X < X + Width && X < otherItem.X + otherItem.Width && otherItem.Y < Y + Height && Y < otherItem.Y + otherItem.Height;
         }
 
-        public LayoutItem FakeItem(int x, int y)
+        public void Init()
         {
-            return new LayoutItem
-            {
-                Id = string.Empty,
-                X = x,
-                Y = y,
-                Width = this.Width,
-                Height = this.Height,
-            };
+            X = -1;
+            Y = -1;
+            Width = -1;
+            Height = -1;
         }
 
-        public void CoverXY(LayoutItem otherItem)
+        public void Cover(LayoutItem otherItem)
         {
             if (otherItem is null)
             {
@@ -62,6 +65,8 @@ namespace CustomControl
 
             this.X = otherItem.X;
             this.Y = otherItem.Y;
+            this.Width = otherItem.Width;
+            this.Height = otherItem.Height;
         }
 
         public override bool Equals(object obj)
