@@ -218,6 +218,19 @@ namespace CustomControl
 
                 elementEndMove.Subscribe(p => OnDragStop((Control)p.Sender)),
 
+                mouseMove
+                    .Subscribe(p =>
+                    {
+                        if (control.ClientRectangle.Right - p.X <= 5 && control.ClientRectangle.Bottom - p.Y <= 5)
+                        {
+                            Cursor.Current = Cursors.SizeNWSE;
+                        }
+                        else
+                        {
+                            Cursor.Current = Cursors.Default;
+                        }
+                    }),
+
                 elementBeginResize.Subscribe(p => OnResizeStart((Control)p.Sender)),
 
                 elementResize.Subscribe(p =>
@@ -417,7 +430,7 @@ namespace CustomControl
         {
             if (item.ItemRef is Control control)
             {
-                control.Location = new Point(item.X * Owner.CellPixel + Owner.CellMargin, item.Y * Owner.CellPixel + Owner.CellMargin);
+                control.Location = new Point(Owner.AutoScrollPosition.X + item.X * Owner.CellPixel + Owner.CellMargin, Owner.AutoScrollPosition.Y + item.Y * Owner.CellPixel + Owner.CellMargin);
                 control.Size = new Size(item.Width * Owner.CellPixel - 2 * Owner.CellMargin, item.Height * Owner.CellPixel - 2 * Owner.CellMargin);
             }
         }

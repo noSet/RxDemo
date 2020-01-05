@@ -53,7 +53,7 @@ namespace CustomControl
         /// <returns>是否更新</returns>
         public bool Update(LayoutItem item, int x, int y, int width, int height)
         {
-            if (MoveItem(item, x, y, width, height))
+            if (MoveItem(item, x, y, width, height, true))
             {
                 Compact();
                 return true;
@@ -70,8 +70,9 @@ namespace CustomControl
         /// <param name="y">坐标Y</param>
         /// <param name="width">宽度</param>
         /// <param name="height">高度</param>
+        /// <param name="master">主碰撞</param>
         /// <returns>是否更新</returns>
-        private bool MoveItem(LayoutItem moveItem, int x, int y, int width, int height)
+        private bool MoveItem(LayoutItem moveItem, int x, int y, int width, int height, bool master)
         {
             if (moveItem is null)
             {
@@ -84,35 +85,52 @@ namespace CustomControl
                 return false;
             }
 
+            var downMove = y - moveItem.Y > 0;
+
             moveItem.X = x;
             moveItem.Y = y;
             moveItem.Width = width;
             moveItem.Height = height;
 
             // 这里先排序，决定了块移动的顺序
-            IEnumerable<LayoutItem> needMoveItems = LayoutItems
-                .OrderBy(p => p, new LayoutItemComparer())
-                .Where(item => moveItem.IntersectsWith(item));
+            IEnumerable<LayoutItem> needMoveItems;
+
+            if (downMove)
+            {
+                needMoveItems = LayoutItems
+                   .OrderBy(p => p, new LayoutItemComparer())
+                   .Where(item => moveItem.IntersectsWith(item));
+            }
+            else
+            {
+                needMoveItems = LayoutItems
+                    .OrderByDescending(p => p, new LayoutItemComparer())
+                    .Where(item => moveItem.IntersectsWith(item));
+            }
 
             foreach (var item in needMoveItems)
             {
-                var fakeItem = new LayoutItem()
+                // 只有主碰撞的时候，元素向下移动时，判断下方的元素是否可以填充到上方
+                if (master && downMove)
                 {
-                    X = item.X,
-                    Y = Math.Max(moveItem.Y - item.Height, 0),
-                    Width = item.Width,
-                    Height = item.Height,
-                    Id = string.Empty
-                };
+                    var fakeItem = new LayoutItem()
+                    {
+                        X = item.X,
+                        Y = Math.Max(moveItem.Y - item.Height, 0),
+                        Width = item.Width,
+                        Height = item.Height,
+                        Id = string.Empty
+                    };
 
-                if (!LayoutItems.Any(i => fakeItem.IntersectsWith(i)))
-                {
-                    MoveItem(item, fakeItem.X, fakeItem.Y, fakeItem.Width, fakeItem.Height);
+                    if (!LayoutItems.Any(i => fakeItem.IntersectsWith(i)))
+                    {
+                        MoveItem(item, fakeItem.X, fakeItem.Y, fakeItem.Width, fakeItem.Height, false);
+                        continue;
+                    }
                 }
-                else
-                {
-                    MoveItem(item, item.X, moveItem.Y + moveItem.Height, item.Width, item.Height);
-                }
+
+                // todo 这里还有个BUG，若item元素下方有元素比item矮，moveItem.Y + moveItem.Height的时候，压缩时会把矮的元素也移动到上方
+                MoveItem(item, item.X, moveItem.Y + moveItem.Height, item.Width, item.Height, false);
             }
 
             return true;
@@ -127,17 +145,16 @@ namespace CustomControl
 
             foreach (var item in sortLayout)
             {
-                item.Y = 0;
+                // 这里先一格一格往上移判断是否有碰撞，若有碰撞，则停留在当前位置
+                LayoutItem fisrt = null;
 
-                // 查找第一个碰撞的元素（排除和自己碰撞）
-                var first = LayoutItems.FirstOrDefault(i => i != item && i.IntersectsWith(item));
-
-                while (first != null)
+                do
                 {
-                    item.Y = first.Y + first.Height;
+                    item.Y--;
+                    fisrt = sortLayout.FirstOrDefault(i => i != item && i.IntersectsWith(item));
+                } while (fisrt is null && item.Y >= 0);
 
-                    first = LayoutItems.FirstOrDefault(i => i != item && i.IntersectsWith(item));
-                }
+                item.Y++;
             }
         }
     }
