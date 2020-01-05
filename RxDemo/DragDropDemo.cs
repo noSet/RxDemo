@@ -97,7 +97,10 @@ namespace RxDemo
 
         private void button7_Click(object sender, EventArgs e)
         {
-            gridFlowLayoutPanel1.Controls.RemoveAt(0);
+            if (gridFlowLayoutPanel1.Controls.Count > 0)
+            {
+                gridFlowLayoutPanel1.Controls.RemoveAt(gridFlowLayoutPanel1.Controls.Count - 1);
+            }
         }
     }
 }

@@ -11,23 +11,42 @@ using System.Windows.Forms.Layout;
 
 namespace CustomControl
 {
+    /// <summary>
+    /// 栅格流布局引擎
+    /// </summary>
     public partial class GridFlowLayoutEngine : LayoutEngine
     {
         public const string AffectedLayout = "Layout";
 
+        /// <summary>
+        /// 需要释放的控件资源
+        /// </summary>
         private readonly Dictionary<Control, IDisposable[]> _disposables = new Dictionary<Control, IDisposable[]>();
 
         internal GridFlowLayoutPanel Owner { get; }
 
         internal Panel Placeholder { get; }
 
-        // todo 因为这里是控件映射，若控件Name属性变更时如果同步
+        /// <summary>
+        /// 控件和控件位置的映射
+        /// todo 因为这里是控件映射，若控件Name属性变更时如果同步
+        /// </summary>
         internal Dictionary<Control, LayoutItem> LayoutItems { get; }
 
+        /// <summary>
+        /// 栅格流布局引擎算法
+        /// </summary>
         internal GridFlowLayoutEngineAlgorithms GridFlowLayoutEngineAlgorithms { get; }
 
-        internal Control MovingControl { get; set; }
+        /// <summary>
+        /// 正在更新位置或者大小的控件
+        /// </summary>
+        internal Control UpdatingControl { get; set; }
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="owner">该布局引擎的所属控件</param>
         public GridFlowLayoutEngine(GridFlowLayoutPanel owner)
         {
             Owner = owner ?? throw new ArgumentNullException(nameof(owner));
@@ -36,14 +55,24 @@ namespace CustomControl
             Placeholder = new Panel { Name = Guid.NewGuid().ToString(), BackColor = Color.Black, Visible = false };
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="child"></param>
+        /// <param name="specified"></param>
         public override void InitLayout(object child, BoundsSpecified specified)
         {
             base.InitLayout(child, specified);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="container"></param>
+        /// <param name="layoutEventArgs"></param>
+        /// <returns></returns>
         public override bool Layout(object container, LayoutEventArgs layoutEventArgs)
         {
-            Debug.Assert(object.ReferenceEquals(Owner, container));
             Contract.Requires(container != null);
             Contract.Requires(layoutEventArgs != null);
 
@@ -79,6 +108,10 @@ namespace CustomControl
             return base.Layout(container, layoutEventArgs);
         }
 
+        /// <summary>
+        /// 初始化（加载）布局，这个方法必须在设计器代码执行完后调用，确保<see cref="Control.Name"/>已经被赋值
+        /// </summary>
+        /// <param name="layoutItems">要加载的布局</param>
         internal void OnInitLayout(IEnumerable<LayoutItem> layoutItems)
         {
             Debug.WriteLine(nameof(OnInitLayout));
@@ -108,6 +141,10 @@ namespace CustomControl
             Layout(Owner, new LayoutEventArgs(Owner, AffectedLayout));
         }
 
+        /// <summary>
+        /// 控件被添加至<see cref="Owner"/>时调用此方法，此方法注册了控件的移动和调整大小事件，生成控件的<see cref="LayoutItem"/>对象，并且将新加入的控件移动到左上角
+        /// </summary>
+        /// <param name="control">要注册的控件</param>
         internal void OnRegister(Control control)
         {
             Debug.WriteLine(nameof(OnRegister));
@@ -195,6 +232,8 @@ namespace CustomControl
                 elementEndResize.Subscribe(p => OnResizeStop((Control) p.Sender)),
             };
 
+            // 设计器中的控件如果被添加，执行此行代码时候，Name属性为空，通过OnInitLayout方法给LayoutItem.Name赋值
+            // 设计器外的控件添加，确保添加的控件已经赋值了Name属性
             var newItem = new LayoutItem
             {
                 Id = control.Name,
@@ -214,6 +253,10 @@ namespace CustomControl
             ChangeItem(newItem, 0, 0, Owner.MinCellWidth, Owner.MinCellHeight);
         }
 
+        /// <summary>
+        /// 控件从<see cref="Owner"/>注销时调用此方法，此方法注销了控件的移动和调整大小事件，并且注销控件的<see cref="LayoutItem"/>对象，并且重新布局
+        /// </summary>
+        /// <param name="control">要注册的控件</param>
         internal void OnUnRegister(Control control)
         {
             Debug.WriteLine(nameof(OnUnRegister));
@@ -231,8 +274,26 @@ namespace CustomControl
             _disposables.Remove(control);
 
             LayoutItems.Remove(control);
+
+            // 取最后一个，确保这个布局再重置成-1后也能引起变动（因为Update里会判断xywh是否相同，若是第一个元素是个默认布局就不会出发变动）
+            var item = LayoutItems.Values.OrderByDescending(p => p, new LayoutItemComparer()).FirstOrDefault();
+
+            if (item != null)
+            {
+                var x = item.X;
+                var y = item.Y;
+                var width = item.Width;
+                var height = item.Height;
+
+                item.Init();
+                ChangeItem(item, x, y, width, height);
+            }
         }
 
+        /// <summary>
+        /// 开始拖拽
+        /// </summary>
+        /// <param name="control"></param>
         internal void OnDragStart(Control control)
         {
             Debug.WriteLine(nameof(OnDragStart));
@@ -242,20 +303,30 @@ namespace CustomControl
             Placeholder.Visible = true;
             moveItem.ItemRef = Placeholder;
             control.BringToFront();
-            MovingControl = control;
+            UpdatingControl = control;
         }
 
+        /// <summary>
+        /// 拖拽
+        /// </summary>
+        /// <param name="control"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
         internal void OnDrag(Control control, int x, int y)
         {
             Debug.WriteLine(nameof(OnDrag));
 
-            if (object.ReferenceEquals(MovingControl, control))
+            if (object.ReferenceEquals(UpdatingControl, control))
             {
                 var moveItem = LayoutItems[control];
                 ChangeItem(moveItem, x, y, moveItem.Width, moveItem.Height);
             }
         }
 
+        /// <summary>
+        /// 结束拖拽
+        /// </summary>
+        /// <param name="control"></param>
         internal void OnDragStop(Control control)
         {
             Debug.WriteLine(nameof(OnDragStop));
@@ -263,11 +334,15 @@ namespace CustomControl
             var item = LayoutItems[control];
             Placeholder.Visible = false;
             item.ItemRef = control;
-            MovingControl = null;
+            UpdatingControl = null;
 
             ApplyLayoutItem(item);
         }
 
+        /// <summary>
+        /// 开始调整大小
+        /// </summary>
+        /// <param name="control"></param>
         internal void OnResizeStart(Control control)
         {
             Debug.WriteLine(nameof(OnResizeStart));
@@ -277,20 +352,30 @@ namespace CustomControl
             Placeholder.Visible = true;
             item.ItemRef = Placeholder;
             control.BringToFront();
-            MovingControl = control;
+            UpdatingControl = control;
         }
 
+        /// <summary>
+        /// 调整大小
+        /// </summary>
+        /// <param name="control"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
         internal void OnResize(Control control, int width, int height)
         {
             Debug.WriteLine(nameof(OnResize));
 
-            if (object.ReferenceEquals(MovingControl, control))
+            if (object.ReferenceEquals(UpdatingControl, control))
             {
                 var item = LayoutItems[control];
                 ChangeItem(item, item.X, item.Y, width, height);
             }
         }
 
+        /// <summary>
+        /// 结束调整大小
+        /// </summary>
+        /// <param name="control"></param>
         internal void OnResizeStop(Control control)
         {
             Debug.WriteLine(nameof(OnResizeStop));
@@ -298,11 +383,19 @@ namespace CustomControl
             var item = LayoutItems[control];
             Placeholder.Visible = false;
             item.ItemRef = control;
-            MovingControl = null;
+            UpdatingControl = null;
 
             ApplyLayoutItem(item);
         }
 
+        /// <summary>
+        /// 改变控件位置
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
         private void ChangeItem(LayoutItem item, int x, int y, int width, int height)
         {
             x = Math.Max(x, 0);
@@ -316,6 +409,10 @@ namespace CustomControl
             }
         }
 
+        /// <summary>
+        /// 应用控件大小
+        /// </summary>
+        /// <param name="item"></param>
         private void ApplyLayoutItem(LayoutItem item)
         {
             if (item.ItemRef is Control control)
