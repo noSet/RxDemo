@@ -111,11 +111,12 @@
             // gridFlowLayoutPanel1
             // 
             this.gridFlowLayoutPanel1.AutoScroll = true;
-            this.gridFlowLayoutPanel1.CellWidth = 75;
+            this.gridFlowLayoutPanel1.CellPixel = 75;
             this.gridFlowLayoutPanel1.Controls.Add(this.Red);
             this.gridFlowLayoutPanel1.Controls.Add(this.Blue);
             this.gridFlowLayoutPanel1.Controls.Add(this.Yellow);
             this.gridFlowLayoutPanel1.Location = new System.Drawing.Point(95, 12);
+            this.gridFlowLayoutPanel1.MinCellWidth = 2;
             this.gridFlowLayoutPanel1.Name = "gridFlowLayoutPanel1";
             this.gridFlowLayoutPanel1.Size = new System.Drawing.Size(1455, 902);
             this.gridFlowLayoutPanel1.TabIndex = 2;
@@ -127,29 +128,29 @@
             this.Red.Margin = new System.Windows.Forms.Padding(5);
             this.Red.Name = "Red";
             this.Red.Padding = new System.Windows.Forms.Padding(10);
-            this.Red.Size = new System.Drawing.Size(740, 365);
+            this.Red.Size = new System.Drawing.Size(0, 0);
             this.Red.TabIndex = 3;
             this.Red.TitleHeight = 0;
             // 
             // Blue
             // 
             this.Blue.BackColor = System.Drawing.Color.Blue;
-            this.Blue.Location = new System.Drawing.Point(5, 380);
+            this.Blue.Location = new System.Drawing.Point(5, 5);
             this.Blue.Margin = new System.Windows.Forms.Padding(5);
             this.Blue.Name = "Blue";
             this.Blue.Padding = new System.Windows.Forms.Padding(10);
-            this.Blue.Size = new System.Drawing.Size(740, 365);
+            this.Blue.Size = new System.Drawing.Size(0, 0);
             this.Blue.TabIndex = 2;
             this.Blue.TitleHeight = 0;
             // 
             // Yellow
             // 
             this.Yellow.BackColor = System.Drawing.Color.Yellow;
-            this.Yellow.Location = new System.Drawing.Point(755, 5);
+            this.Yellow.Location = new System.Drawing.Point(5, 5);
             this.Yellow.Margin = new System.Windows.Forms.Padding(5);
             this.Yellow.Name = "Yellow";
             this.Yellow.Padding = new System.Windows.Forms.Padding(10);
-            this.Yellow.Size = new System.Drawing.Size(365, 365);
+            this.Yellow.Size = new System.Drawing.Size(0, 0);
             this.Yellow.TabIndex = 1;
             // 
             // DragDropDemo

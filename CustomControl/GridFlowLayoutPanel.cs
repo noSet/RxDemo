@@ -13,7 +13,23 @@ namespace CustomControl
 
         [Browsable(true)]
         [DefaultValue(50)]
-        public int CellWidth { get; set; } = 50;
+        [DisplayName("栅格单元像素")]
+        public int CellPixel { get; set; } = 50;
+
+        [Browsable(true)]
+        [DefaultValue(1)]
+        [DisplayName("最小栅格宽度")]
+        public int MinCellWidth { get; set; } = 1;
+
+        [Browsable(true)]
+        [DefaultValue(1)]
+        [DisplayName("最小栅格高度")]
+        public int MinCellHeight { get; set; } = 1;
+
+        [Browsable(true)]
+        [DefaultValue(5)]
+        [DisplayName("栅格间距")]
+        public int CellMargin { get; set; } = 5;
 
         public GridFlowLayoutPanel()
         {

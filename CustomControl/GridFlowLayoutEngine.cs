@@ -5,6 +5,7 @@ using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Forms.Layout;
 
@@ -32,7 +33,7 @@ namespace CustomControl
             Owner = owner ?? throw new ArgumentNullException(nameof(owner));
             LayoutItems = new Dictionary<Control, LayoutItem>();
             GridFlowLayoutEngineAlgorithms = new GridFlowLayoutEngineAlgorithms(LayoutItems.Values);
-            Placeholder = new Panel { BackColor = Color.Black, Visible = false };
+            Placeholder = new Panel { Name = Guid.NewGuid().ToString(), BackColor = Color.Black, Visible = false };
         }
 
         public override void InitLayout(object child, BoundsSpecified specified)
@@ -42,7 +43,7 @@ namespace CustomControl
 
         public override bool Layout(object container, LayoutEventArgs layoutEventArgs)
         {
-            Debug.Assert(object.ReferenceEquals(this.Owner, container));
+            Debug.Assert(object.ReferenceEquals(Owner, container));
             Contract.Requires(container != null);
             Contract.Requires(layoutEventArgs != null);
 
@@ -52,57 +53,28 @@ namespace CustomControl
             {
                 try
                 {
-                    this.Owner.SuspendLayout();
+                    Owner.SuspendLayout();
 
                     foreach (var item in LayoutItems.Values)
                     {
-                        Control control = item.ItemRef as Control;
-
-                        control.Location = new Point(item.X * this.Owner.CellWidth + 5, item.Y * this.Owner.CellWidth + 5);
-                        control.Size = new Size(item.Width * this.Owner.CellWidth - 10, item.Height * this.Owner.CellWidth - 10);
+                        ApplyLayoutItem(item);
                     }
 
                     return false;
                 }
                 finally
                 {
-                    this.Owner.ResumeLayout(true);
+                    Owner.ResumeLayout(true);
                 }
             }
 
-            //// 初始化
-            //if (object.ReferenceEquals(layoutEventArgs.AffectedControl, this.Owner))
-            //{
-            //    this.Owner.Controls.Add(Placeholder);
-
-            //    for (int i = 0; i < 3; i++)
-            //    {
-            //        Control control = this.Owner.Controls[i];
-
-            //        if (i == 0)
-            //        {
-            //            LayoutItems[control] = new LayoutItem { X = 0, Y = 0, Width = 10, Height = 5, Id = control.Name, ItemRef = control };
-            //        }
-            //        else if (i == 1)
-            //        {
-            //            LayoutItems[control] = new LayoutItem { X = 0, Y = 5, Width = 10, Height = 5, Id = control.Name, ItemRef = control };
-            //        }
-            //        else
-            //        {
-            //            LayoutItems[control] = new LayoutItem { X = 10, Y = 0, Width = 5, Height = 5, Id = control.Name, ItemRef = control };
-            //        }
-            //    }
-
-            //    foreach (var item in LayoutItems.Values)
-            //    {
-            //        Control control = item.ItemRef as Control;
-
-            //        control.Location = new Point(item.X * this.Owner.CellWidth + 5, item.Y * this.Owner.CellWidth + 5);
-            //        control.Size = new Size(item.Width * this.Owner.CellWidth - 10, item.Height * this.Owner.CellWidth - 10);
-            //    }
-
-            //    return false;
-            //}
+            // 初始化
+            if (object.ReferenceEquals(layoutEventArgs.AffectedControl, Owner))
+            {
+                Owner.SuspendLayout();
+                Owner.Controls.Add(Placeholder);
+                Owner.ResumeLayout(false);
+            }
 
             return base.Layout(container, layoutEventArgs);
         }
@@ -133,7 +105,7 @@ namespace CustomControl
             }
 
             GridFlowLayoutEngineAlgorithms.InitLayout();
-            Layout(this.Owner, new LayoutEventArgs(this.Owner, AffectedLayout));
+            Layout(Owner, new LayoutEventArgs(Owner, AffectedLayout));
         }
 
         internal void OnRegister(Control control)
@@ -146,6 +118,11 @@ namespace CustomControl
             }
 
             const int dragRectangle = 10;
+
+            int moving = 0;
+            int resizing = 0;
+
+            // 不必要使用Interlocked.CompareExchange，因为都在UI线程上执行
 
             // 鼠标左键点击
             var mouseDown = Observable.FromEventPattern<MouseEventArgs>(control, nameof(control.MouseDown))
@@ -162,7 +139,8 @@ namespace CustomControl
             // 鼠标左键点击标题部位，并且鼠标有移动
             var elementBeginMove = mouseDown
                 .Where(p => p.EventArgs.Location.Y <= dragRectangle)
-                .Zip(mouseMove, (one, two) => one);
+                .Zip(mouseMove, (one, two) => one)
+                .Where(p => Interlocked.CompareExchange(ref moving, 1, 0) == 0);
 
             // 鼠标左键点击标题部位，并且按住不放移动鼠标，左键弹起结束
             var elementMoving = from start in mouseDown.Select(p => p.EventArgs.Location).Where(p => p.Y <= dragRectangle)
@@ -172,13 +150,13 @@ namespace CustomControl
 
             // 鼠标移动过程中左键弹起
             var elementEndMove = mouseUp
-                .Where(p => p.EventArgs.Location.Y <= dragRectangle)
-                .Zip(mouseMove, (one, two) => one);
+                .Where(p => Interlocked.CompareExchange(ref moving, 0, 1) == 1);
 
+            // 鼠标左键点击调整大小位置，并且移动鼠标
             var elementBeginResize = mouseDown
                 .Where(p => control.ClientRectangle.Right - p.EventArgs.Location.X <= 5 && control.ClientRectangle.Bottom - p.EventArgs.Location.Y <= 5)
-                .Zip(mouseMove, (one, two) => one);
-
+                .Zip(mouseMove, (one, two) => one)
+                .Where(p => Interlocked.CompareExchange(ref resizing, 1, 0) == 0);
 
             // 鼠标左键点击右下角调整大小并且鼠标在移动
             var elementResize = from start in mouseDown.Select(p => p.EventArgs.Location).Where(p => control.ClientRectangle.Right - p.X <= 5 && control.ClientRectangle.Bottom - p.Y <= 5)
@@ -186,8 +164,7 @@ namespace CustomControl
                                 select process;
 
             var elementEndResize = mouseUp
-                .Where(p => control.ClientRectangle.Right - p.EventArgs.Location.X <= 5 && control.ClientRectangle.Bottom - p.EventArgs.Location.Y <= 5)
-                .Zip(mouseMove, (one, two) => one);
+                .Where(p => Interlocked.CompareExchange(ref resizing, 0, 1) == 1);
 
             _disposables[control] = new[]
             {
@@ -195,20 +172,22 @@ namespace CustomControl
 
                 elementMoving.Subscribe(p =>
                 {
-                    var localtion = control.Location;
-                    localtion.Offset(p.X, p.Y);
-                    control.Location = localtion;
+                    var x = Math.Max(control.Location.X + p.X, Owner.CellMargin);
+                    var y = Math.Max(control.Location.Y + p.Y, Owner.CellMargin);
+                    control.Location = new Point(Math.Max(control.Location.X + p.X, Owner.CellMargin), Math.Max(control.Location.Y + p.Y, Owner.CellMargin));
 
-                    OnDrag(control, Round(localtion.X), Round(localtion.Y));
+                    OnDrag(control, Round(x), Round(y));
                 }),
 
                 elementEndMove.Subscribe(p => OnDragStop((Control)p.Sender)),
 
-                elementBeginResize.Subscribe(p=> OnResizeStart((Control)p.Sender)),
+                elementBeginResize.Subscribe(p => OnResizeStart((Control)p.Sender)),
 
                 elementResize.Subscribe(p =>
                 {
-                    control.Size = new Size(p);
+                    var x = Math.Max(p.X, Owner.MinCellWidth * Owner.CellPixel - 2 * Owner.CellMargin);
+                    var y = Math.Max(p.Y, Owner.MinCellHeight * Owner.CellPixel - 2 * Owner.CellMargin);
+                    control.Size = new Size(x, y);
 
                     OnResize(control, Round(control.Size.Width), Round(control.Size.Height));
                 }),
@@ -228,11 +207,11 @@ namespace CustomControl
 
             int Round(int num)
             {
-                var quotient = Math.DivRem(num, Owner.CellWidth, out var remainder);
-                return ((double)remainder / Owner.CellWidth) > 0.25 ? quotient + 1 : quotient;
+                var quotient = Math.DivRem(num, Owner.CellPixel, out var remainder);
+                return ((double)remainder / Owner.CellPixel) > 0.25 ? quotient + 1 : quotient;
             }
 
-            ChangeItem(newItem, 0, 0, 1, 1);
+            ChangeItem(newItem, 0, 0, Owner.MinCellWidth, Owner.MinCellHeight);
         }
 
         internal void OnUnRegister(Control control)
@@ -286,8 +265,7 @@ namespace CustomControl
             item.ItemRef = control;
             MovingControl = null;
 
-            control.Location = new Point(item.X * this.Owner.CellWidth + 5, item.Y * this.Owner.CellWidth + 5);
-            control.Size = new Size(item.Width * this.Owner.CellWidth - 10, item.Height * this.Owner.CellWidth - 10);
+            ApplyLayoutItem(item);
         }
 
         internal void OnResizeStart(Control control)
@@ -304,7 +282,7 @@ namespace CustomControl
 
         internal void OnResize(Control control, int width, int height)
         {
-            Debug.WriteLine(nameof(OnDrag));
+            Debug.WriteLine(nameof(OnResize));
 
             if (object.ReferenceEquals(MovingControl, control))
             {
@@ -315,27 +293,35 @@ namespace CustomControl
 
         internal void OnResizeStop(Control control)
         {
-            Debug.WriteLine(nameof(OnDragStop));
+            Debug.WriteLine(nameof(OnResizeStop));
 
             var item = LayoutItems[control];
             Placeholder.Visible = false;
             item.ItemRef = control;
             MovingControl = null;
 
-            control.Location = new Point(item.X * this.Owner.CellWidth + 5, item.Y * this.Owner.CellWidth + 5);
-            control.Size = new Size(item.Width * this.Owner.CellWidth - 10, item.Height * this.Owner.CellWidth - 10);
+            ApplyLayoutItem(item);
         }
 
         private void ChangeItem(LayoutItem item, int x, int y, int width, int height)
         {
             x = Math.Max(x, 0);
             y = Math.Max(y, 0);
-            width = Math.Max(width, 1);
-            height = Math.Max(height, 1);
+            width = Math.Max(width, Owner.MinCellWidth);
+            height = Math.Max(height, Owner.MinCellHeight);
 
             if (GridFlowLayoutEngineAlgorithms.Update(item, x, y, width, height))
             {
-                Layout(this.Owner, new LayoutEventArgs(this.Owner, AffectedLayout));
+                Layout(Owner, new LayoutEventArgs(Owner, AffectedLayout));
+            }
+        }
+
+        private void ApplyLayoutItem(LayoutItem item)
+        {
+            if (item.ItemRef is Control control)
+            {
+                control.Location = new Point(item.X * Owner.CellPixel + Owner.CellMargin, item.Y * Owner.CellPixel + Owner.CellMargin);
+                control.Size = new Size(item.Width * Owner.CellPixel - 2 * Owner.CellMargin, item.Height * Owner.CellPixel - 2 * Owner.CellMargin);
             }
         }
     }
