@@ -75,7 +75,11 @@ namespace RxDemo
 
                 var items = JsonConvert.DeserializeObject<IEnumerable<LayoutItem>>(jsonData);
 
-                gridFlowLayoutPanel1.InitLayout(items);
+                gridFlowLayoutPanel1.InitLayoutItems(items);
+            }
+            else
+            {
+                gridFlowLayoutPanel1.InitLayoutItems();
             }
         }
 

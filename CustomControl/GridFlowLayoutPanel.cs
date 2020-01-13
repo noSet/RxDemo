@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Forms.Layout;
 
@@ -74,11 +75,32 @@ namespace CustomControl
             base.OnControlRemoved(e);
         }
 
-        public void InitLayout(IEnumerable<LayoutItem> layoutItems)
+        /// <summary>
+        /// 使用默认的布局方式初始化栅格布局
+        /// </summary>
+        public void InitLayoutItems()
         {
+            InitLayoutItems(Enumerable.Empty<LayoutItem>());
+        }
+
+        /// <summary>
+        /// 初始化栅格布局
+        /// </summary>
+        /// <param name="layoutItems"></param>
+        public void InitLayoutItems(IEnumerable<LayoutItem> layoutItems)
+        {
+            if (layoutItems is null)
+            {
+                throw new ArgumentNullException(nameof(layoutItems));
+            }
+
             _layoutEngine.OnInitLayout(layoutItems);
         }
 
+        /// <summary>
+        /// 获取栅格布局
+        /// </summary>
+        /// <returns>栅格布局</returns>
         public IEnumerable<LayoutItem> GetLayoutItems()
         {
             return _layoutEngine.LayoutItems.Values;

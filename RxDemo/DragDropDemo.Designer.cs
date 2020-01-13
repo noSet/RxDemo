@@ -115,31 +115,32 @@
             this.gridFlowLayoutPanel1.Controls.Add(this.Red);
             this.gridFlowLayoutPanel1.Controls.Add(this.Blue);
             this.gridFlowLayoutPanel1.Controls.Add(this.Yellow);
-            this.gridFlowLayoutPanel1.Location = new System.Drawing.Point(95, 12);
+            this.gridFlowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.gridFlowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.gridFlowLayoutPanel1.MinCellWidth = 2;
             this.gridFlowLayoutPanel1.Name = "gridFlowLayoutPanel1";
-            this.gridFlowLayoutPanel1.Size = new System.Drawing.Size(1455, 902);
+            this.gridFlowLayoutPanel1.Size = new System.Drawing.Size(1051, 391);
             this.gridFlowLayoutPanel1.TabIndex = 2;
             // 
             // Red
             // 
             this.Red.BackColor = System.Drawing.Color.Red;
-            this.Red.Location = new System.Drawing.Point(5, 5);
+            this.Red.Location = new System.Drawing.Point(5, 155);
             this.Red.Margin = new System.Windows.Forms.Padding(5);
             this.Red.Name = "Red";
             this.Red.Padding = new System.Windows.Forms.Padding(10);
-            this.Red.Size = new System.Drawing.Size(0, 0);
+            this.Red.Size = new System.Drawing.Size(65, 65);
             this.Red.TabIndex = 3;
             this.Red.TitleHeight = 0;
             // 
             // Blue
             // 
             this.Blue.BackColor = System.Drawing.Color.Blue;
-            this.Blue.Location = new System.Drawing.Point(5, 5);
+            this.Blue.Location = new System.Drawing.Point(5, 80);
             this.Blue.Margin = new System.Windows.Forms.Padding(5);
             this.Blue.Name = "Blue";
             this.Blue.Padding = new System.Windows.Forms.Padding(10);
-            this.Blue.Size = new System.Drawing.Size(0, 0);
+            this.Blue.Size = new System.Drawing.Size(65, 65);
             this.Blue.TabIndex = 2;
             this.Blue.TitleHeight = 0;
             // 
@@ -150,14 +151,14 @@
             this.Yellow.Margin = new System.Windows.Forms.Padding(5);
             this.Yellow.Name = "Yellow";
             this.Yellow.Padding = new System.Windows.Forms.Padding(10);
-            this.Yellow.Size = new System.Drawing.Size(0, 0);
+            this.Yellow.Size = new System.Drawing.Size(65, 65);
             this.Yellow.TabIndex = 1;
             // 
             // DragDropDemo
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1647, 1083);
+            this.ClientSize = new System.Drawing.Size(1051, 500);
             this.Controls.Add(this.button7);
             this.Controls.Add(this.button6);
             this.Controls.Add(this.gridFlowLayoutPanel1);

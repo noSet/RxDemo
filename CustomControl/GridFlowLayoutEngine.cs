@@ -133,6 +133,9 @@ namespace CustomControl
 
             foreach (var item in LayoutItems.Values.Where(i => i.X == -1 && i.Y == -1))
             {
+                item.Width = Owner.MinCellWidth;
+                item.Height = Owner.MinCellHeight;
+
                 item.X = 0;
                 item.Y = LayoutItems.Values.Max(i => i.Y + i.Height);
             }
