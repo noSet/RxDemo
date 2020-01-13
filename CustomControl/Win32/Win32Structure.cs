@@ -140,7 +140,7 @@ namespace CustomControl.Win32
 
 
     /// <summary>
-    /// 钩子委托声明
+    /// 钩子委托
     /// </summary>
     /// <param name="nCode"></param>
     /// <param name="wParam"></param>

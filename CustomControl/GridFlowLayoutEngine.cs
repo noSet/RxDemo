@@ -23,8 +23,6 @@ namespace CustomControl
         /// </summary>
         private readonly Dictionary<Control, IDisposable[]> _disposables = new Dictionary<Control, IDisposable[]>();
 
-        private readonly MouseHook _mouseHook;
-
         internal GridFlowLayoutPanel Owner { get; }
 
         internal Panel Placeholder { get; }
@@ -52,7 +50,6 @@ namespace CustomControl
         public GridFlowLayoutEngine(GridFlowLayoutPanel owner)
         {
             Owner = owner ?? throw new ArgumentNullException(nameof(owner));
-            _mouseHook = new MouseHook(owner);
             LayoutItems = new Dictionary<Control, LayoutItem>();
             GridFlowLayoutEngineAlgorithms = new GridFlowLayoutEngineAlgorithms(LayoutItems.Values);
             Placeholder = new Panel { Name = Guid.NewGuid().ToString(), BackColor = Color.Black, Visible = false };
@@ -211,18 +208,18 @@ namespace CustomControl
 
             _disposables[control] = new[]
             {
-                elementBeginMove.Subscribe(p => OnDragStart((Control)p.Sender)),
+                //elementBeginMove.Subscribe(p => OnDragStart((Control)p.Sender)),
 
-                elementMoving.Subscribe(p =>
-                {
-                    var x = Math.Max(control.Location.X + p.X, Owner.CellMargin);
-                    var y = Math.Max(control.Location.Y + p.Y, Owner.CellMargin);
-                    control.Location = new Point(Math.Max(control.Location.X + p.X, Owner.CellMargin), Math.Max(control.Location.Y + p.Y, Owner.CellMargin));
+                //elementMoving.Subscribe(p =>
+                //{
+                //    var x = Math.Max(control.Location.X + p.X, Owner.CellMargin);
+                //    var y = Math.Max(control.Location.Y + p.Y, Owner.CellMargin);
+                //    control.Location = new Point(Math.Max(control.Location.X + p.X, Owner.CellMargin), Math.Max(control.Location.Y + p.Y, Owner.CellMargin));
 
-                    OnDrag(control, Round(x), Round(y));
-                }),
+                //    OnDrag(control, Round(x), Round(y));
+                //}),
 
-                elementEndMove.Subscribe(p => OnDragStop((Control)p.Sender)),
+                //elementEndMove.Subscribe(p => OnDragStop((Control)p.Sender)),
 
                 mouseMove
                     .Subscribe(p =>
@@ -237,18 +234,18 @@ namespace CustomControl
                         }
                     }),
 
-                elementBeginResize.Subscribe(p => OnResizeStart((Control)p.Sender)),
+                //elementBeginResize.Subscribe(p => OnResizeStart((Control)p.Sender)),
 
-                elementResize.Subscribe(p =>
-                {
-                    var x = Math.Max(p.X, Owner.MinCellWidth * Owner.CellPixel - 2 * Owner.CellMargin);
-                    var y = Math.Max(p.Y, Owner.MinCellHeight * Owner.CellPixel - 2 * Owner.CellMargin);
-                    control.Size = new Size(x, y);
+                //elementResize.Subscribe(p =>
+                //{
+                //    var x = Math.Max(p.X, Owner.MinCellWidth * Owner.CellPixel - 2 * Owner.CellMargin);
+                //    var y = Math.Max(p.Y, Owner.MinCellHeight * Owner.CellPixel - 2 * Owner.CellMargin);
+                //    control.Size = new Size(x, y);
 
-                    OnResize(control, Round(control.Size.Width), Round(control.Size.Height));
-                }),
+                //    OnResize(control, Round(control.Size.Width), Round(control.Size.Height));
+                //}),
 
-                elementEndResize.Subscribe(p => OnResizeStop((Control) p.Sender)),
+                //elementEndResize.Subscribe(p => OnResizeStop((Control) p.Sender)),
             };
 
             // 设计器中的控件如果被添加，执行此行代码时候，Name属性为空，通过OnInitLayout方法给LayoutItem.Name赋值
@@ -262,12 +259,6 @@ namespace CustomControl
             newItem.Init();
 
             LayoutItems[control] = newItem;
-
-            int Round(int num)
-            {
-                var quotient = Math.DivRem(num, Owner.CellPixel, out var remainder);
-                return ((double)remainder / Owner.CellPixel) > 0.25 ? quotient + 1 : quotient;
-            }
 
             ChangeItem(newItem, 0, 0, Owner.MinCellWidth, Owner.MinCellHeight);
         }

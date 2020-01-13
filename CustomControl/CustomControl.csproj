@@ -44,17 +44,8 @@
   <ItemGroup>
     <Compile Include="GridFlowLayoutEngine.cs" />
     <Compile Include="GridFlowLayoutEngineAlgorithms.cs" />
-    <Compile Include="GridFlowLayoutItem.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="GridFlowLayoutItem.Designer.cs">
-      <DependentUpon>GridFlowLayoutItem.cs</DependentUpon>
-    </Compile>
     <Compile Include="GridFlowLayoutPanel.cs">
       <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="GridFlowLayoutPanel.Designer.cs">
-      <DependentUpon>GridFlowLayoutPanel.cs</DependentUpon>
     </Compile>
     <Compile Include="LayoutItem.cs" />
     <Compile Include="LayoutItemComparer.cs" />
