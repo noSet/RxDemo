@@ -40,7 +40,9 @@
             this.Red = new CustomControl.GridFlowLayoutItem(this.components);
             this.Blue = new CustomControl.GridFlowLayoutItem(this.components);
             this.Yellow = new System.Windows.Forms.Panel();
+            this.button8 = new System.Windows.Forms.Button();
             this.gridFlowLayoutPanel1.SuspendLayout();
+            this.Yellow.SuspendLayout();
             this.SuspendLayout();
             // 
             // button6
@@ -147,12 +149,23 @@
             // Yellow
             // 
             this.Yellow.BackColor = System.Drawing.Color.Yellow;
+            this.Yellow.Controls.Add(this.button8);
             this.Yellow.Location = new System.Drawing.Point(5, 5);
             this.Yellow.Margin = new System.Windows.Forms.Padding(5);
             this.Yellow.Name = "Yellow";
-            this.Yellow.Padding = new System.Windows.Forms.Padding(10);
             this.Yellow.Size = new System.Drawing.Size(65, 65);
             this.Yellow.TabIndex = 1;
+            // 
+            // button8
+            // 
+            this.button8.Dock = System.Windows.Forms.DockStyle.Top;
+            this.button8.Location = new System.Drawing.Point(0, 0);
+            this.button8.Name = "button8";
+            this.button8.Size = new System.Drawing.Size(65, 23);
+            this.button8.TabIndex = 0;
+            this.button8.Text = "button8";
+            this.button8.UseVisualStyleBackColor = true;
+            this.button8.Click += new System.EventHandler(this.button8_Click);
             // 
             // DragDropDemo
             // 
@@ -165,6 +178,7 @@
             this.Name = "DragDropDemo";
             this.Text = "Form1";
             this.gridFlowLayoutPanel1.ResumeLayout(false);
+            this.Yellow.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -181,6 +195,7 @@
         private System.Windows.Forms.Button button7;
         private CustomControl.GridFlowLayoutItem Blue;
         private CustomControl.GridFlowLayoutItem Red;
+        private System.Windows.Forms.Button button8;
     }
 }
 

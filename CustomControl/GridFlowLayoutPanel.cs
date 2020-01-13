@@ -11,6 +11,7 @@ namespace CustomControl
     public partial class GridFlowLayoutPanel : Panel
     {
         private GridFlowLayoutEngine _layoutEngine;
+        private HashSet<IntPtr> _controlHandles = new HashSet<IntPtr>();
 
         [Browsable(true)]
         [DefaultValue(50)]
@@ -31,6 +32,8 @@ namespace CustomControl
         [DefaultValue(5)]
         [DisplayName("栅格间距")]
         public int CellMargin { get; set; } = 5;
+
+        public HashSet<IntPtr> ControlHandles => _controlHandles;
 
         public GridFlowLayoutPanel()
         {
@@ -63,6 +66,7 @@ namespace CustomControl
         {
             Contract.Requires(e != null);
 
+            ControlHandles.Add(e.Control.Handle);
             _layoutEngine.OnRegister(e.Control);
             base.OnControlAdded(e);
         }
@@ -71,6 +75,7 @@ namespace CustomControl
         {
             Contract.Requires(e != null);
 
+            ControlHandles.Remove(e.Control.Handle);
             _layoutEngine.OnUnRegister(e.Control);
             base.OnControlRemoved(e);
         }

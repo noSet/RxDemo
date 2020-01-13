@@ -23,6 +23,8 @@ namespace CustomControl
         /// </summary>
         private readonly Dictionary<Control, IDisposable[]> _disposables = new Dictionary<Control, IDisposable[]>();
 
+        private readonly MouseHook _mouseHook;
+
         internal GridFlowLayoutPanel Owner { get; }
 
         internal Panel Placeholder { get; }
@@ -50,6 +52,7 @@ namespace CustomControl
         public GridFlowLayoutEngine(GridFlowLayoutPanel owner)
         {
             Owner = owner ?? throw new ArgumentNullException(nameof(owner));
+            _mouseHook = new MouseHook(owner);
             LayoutItems = new Dictionary<Control, LayoutItem>();
             GridFlowLayoutEngineAlgorithms = new GridFlowLayoutEngineAlgorithms(LayoutItems.Values);
             Placeholder = new Panel { Name = Guid.NewGuid().ToString(), BackColor = Color.Black, Visible = false };

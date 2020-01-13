@@ -106,5 +106,10 @@ namespace RxDemo
                 gridFlowLayoutPanel1.Controls.RemoveAt(gridFlowLayoutPanel1.Controls.Count - 1);
             }
         }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            Text = Guid.NewGuid().ToString();
+        }
     }
 }
